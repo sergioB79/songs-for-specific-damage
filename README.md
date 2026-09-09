@@ -34,7 +34,7 @@ The archive contains **125 documented cases** across eight primary damage famili
 - MAKE IT WORSE escalation mechanic
 - Surprise Me route
 - Individual case files with Spotify embeds
-- Full SSD damage database in JSON + source XLSX
+- Full SSD damage database in versioned JSON chunks
 
 ## Stack
 
@@ -52,7 +52,13 @@ npm run dev
 
 ## Source of truth
 
-`src/data/ssd.json` contains the 125-case database used by the site and quiz engine.
+The runtime database is deliberately split to keep the archive easy to version and review:
+
+- `src/data/families.json` — eight damage-family prototypes
+- `src/data/chunks/cases-01.json` … `cases-10.json` — all 125 documented cases
+- `src/lib/data.ts` — combines those chunks for the application and recommendation engine
+
+The editable source workbook is generated from the same dataset and kept as a separate project artifact rather than committed as binary source.
 
 The v1 classification is editorial and based on playlist title + supplied description. Track-level review is a later refinement; confidence and review metadata are retained in the data model.
 
