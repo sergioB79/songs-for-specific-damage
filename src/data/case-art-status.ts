@@ -1,1 +1,1 @@
-export const caseArtBatch001Status = "ASSETS_PENDING_BINARY_UPLOAD" as const;
+export const caseArtBatch001Status = "LIVE_VIA_MATERIALIZER" as const;
