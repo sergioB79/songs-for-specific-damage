@@ -1,0 +1,2 @@
+import { IndexClient } from "@/components/IndexClient";
+export default function IndexPage(){return <main className="section"><div className="section-head"><div><div className="eyebrow">THE DAMAGE INDEX // STATUS: POORLY CONTAINED</div><h2>125 documented cases</h2></div><p className="section-copy">This got out of hand. Search by title, symptom, damage family or whatever phrase you think will make the situation look more intentional.</p></div><IndexClient/></main>}
