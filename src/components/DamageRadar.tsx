@@ -67,10 +67,9 @@ function profileOf(item: CaseFile): Record<Axis, number> {
 const ELIGIBLE_CASES = cases.filter((item) => item.quiz_eligible !== "REVIEW");
 
 /*
-  The radar is a 2D navigation surface, but the archive is 9D.
-  A deterministic sunflower layout gives every case its own patch of territory,
-  so dragging can genuinely reach the full archive instead of collapsing into
-  a handful of mathematically convenient neighbours.
+  This is deliberately an archive-navigation field, not a 2D claim about the
+  nine-dimensional data. A deterministic sunflower layout gives every case its
+  own reachable patch of territory. The actual 9D profile is shown separately.
 */
 const ARCHIVE_FIELD = ELIGIBLE_CASES.map((item, index) => {
   const radius = Math.sqrt((index + .5) / ELIGIBLE_CASES.length) * .94;
@@ -96,6 +95,7 @@ export function DamageRadar() {
   const manualMatches = useMemo(() => closestCases(manualProfile, 3), [manualProfile]);
   const matches = manual ? manualMatches : positionalMatches.map((entry) => entry.item);
   const primary = matches[0];
+  const primaryEntry = manual ? null : positionalMatches[0] ?? null;
   const profile = manual ? manualProfile : primary ? profileOf(primary) : neutralProfile;
   const family = manual ? closestFamily(profile).family : primary?.primary_damage ?? "COSMIC MALFUNCTION";
   const primaryArt = primary ? getCaseArt(primary) : null;
@@ -131,18 +131,18 @@ export function DamageRadar() {
   return <div className="radar-shell">
     <section className="radar-stage">
       <div className="radar-instructions">
-        <span className="eyebrow">POSITIONAL DIAGNOSTICS // 125 CASES IN FIELD</span>
-        <p><strong>Drag the dot through the archive.</strong> Every small point is an actual case, not decorative emotional dust.</p>
-        <p className="micro">THE MAP IS APPROXIMATE. THE CONSEQUENCES ARE REAL ENOUGH.</p>
+        <span className="eyebrow">ARCHIVE FIELD // 125 CASES</span>
+        <p><strong>Drag the cursor through the archive.</strong> Every small point is an actual case. The red point is the treatment currently selected.</p>
+        <p className="micro">CURSOR = YOU // RED = NEAREST CASE // POSITIONS ARE FOR NAVIGATION, NOT DIAGNOSIS</p>
       </div>
 
-      <div className="radar-board">
+      <div className="radar-board archive-board">
         <svg
           ref={svgRef}
-          className="radar-svg"
+          className="radar-svg archive-field-svg"
           viewBox={`0 0 ${SIZE} ${SIZE}`}
           role="img"
-          aria-label="Interactive nine-axis damage map containing the full playlist archive. Drag the central point to change the recommendation."
+          aria-label="Interactive archive field containing the full playlist archive. Drag the cursor to choose nearby cases."
           onPointerDown={(event) => {
             setDragging(true);
             event.currentTarget.setPointerCapture(event.pointerId);
@@ -155,6 +155,49 @@ export function DamageRadar() {
           }}
           onPointerCancel={() => setDragging(false)}
         >
+          <circle cx={CENTER} cy={CENTER} r={RADIUS} className="archive-boundary" />
+          <circle cx={CENTER} cy={CENTER} r={RADIUS * .67} className="archive-guide" />
+          <circle cx={CENTER} cy={CENTER} r={RADIUS * .34} className="archive-guide" />
+          <line x1={CENTER - RADIUS} y1={CENTER} x2={CENTER + RADIUS} y2={CENTER} className="archive-crosshair" />
+          <line x1={CENTER} y1={CENTER - RADIUS} x2={CENTER} y2={CENTER + RADIUS} className="archive-crosshair" />
+
+          {ARCHIVE_FIELD.map((entry) => {
+            const isPrimary = !manual && primary?.case_id === entry.item.case_id;
+            const isAlternative = !manual && matches.slice(1).some((item) => item.case_id === entry.item.case_id);
+            return <circle
+              key={entry.item.case_id}
+              cx={CENTER + entry.x * RADIUS}
+              cy={CENTER + entry.y * RADIUS}
+              r={isPrimary ? 6 : isAlternative ? 4 : 2.5}
+              className={isPrimary ? "radar-case-dot is-primary" : isAlternative ? "radar-case-dot is-alt" : "radar-case-dot"}
+            ><title>{entry.item.title}</title></circle>;
+          })}
+
+          {!manual && primaryEntry && <line
+            x1={CENTER + point.x * RADIUS}
+            y1={CENTER + point.y * RADIUS}
+            x2={CENTER + primaryEntry.x * RADIUS}
+            y2={CENTER + primaryEntry.y * RADIUS}
+            className="archive-selection-line"
+          />}
+
+          {!manual && <>
+            <circle cx={CENTER + point.x * RADIUS} cy={CENTER + point.y * RADIUS} r="18" className="radar-dot-halo" />
+            <circle cx={CENTER + point.x * RADIUS} cy={CENTER + point.y * RADIUS} r="10" className="radar-dot" />
+          </>}
+        </svg>
+        <div className="radar-status"><span>{manual ? "FINE TUNE ACTIVE // DRAG TO RETURN TO ARCHIVE" : dragging ? "ARCHIVE SCANNING" : "DRAG THROUGH 125 CASES"}</span><button type="button" onClick={reset}>RESET DAMAGE</button></div>
+      </div>
+    </section>
+
+    <aside className="radar-result" aria-live="polite">
+      <div className="eyebrow">CURRENT DAMAGE PROFILE</div>
+      <div className="radar-family">{family}</div>
+      <div className="radar-match-label">NEAREST CASE // {matchScore}% MATCH</div>
+
+      <div className="profile-radar-card">
+        <div className="eyebrow">DAMAGE PROFILE // 9D</div>
+        <svg className="profile-radar-svg" viewBox={`0 0 ${SIZE} ${SIZE}`} role="img" aria-label="Nine-axis damage profile for the current recommendation">
           {[1, .75, .5, .25].map((level) => <polygon key={level} points={ringPoints(level)} className="radar-ring" />)}
           {DISPLAY_AXES.map((axis, index) => {
             const dir = direction(index);
@@ -168,32 +211,11 @@ export function DamageRadar() {
               <text x={labelX} y={labelY} textAnchor={anchor} dominantBaseline="middle" className="radar-label">{LABELS[axis]}</text>
             </g>;
           })}
-
-          {!manual && ARCHIVE_FIELD.map((entry) => {
-            const active = matches.some((item) => item.case_id === entry.item.case_id);
-            return <circle
-              key={entry.item.case_id}
-              cx={CENTER + entry.x * RADIUS}
-              cy={CENTER + entry.y * RADIUS}
-              r={active ? 5 : 2.4}
-              className={active ? "radar-case-dot is-active" : "radar-case-dot"}
-            ><title>{entry.item.title}</title></circle>;
-          })}
-
           <polygon points={polygonPoints(profile)} className="radar-profile" />
-          {!manual && <>
-            <circle cx={CENTER + point.x * RADIUS} cy={CENTER + point.y * RADIUS} r="18" className="radar-dot-halo" />
-            <circle cx={CENTER + point.x * RADIUS} cy={CENTER + point.y * RADIUS} r="10" className="radar-dot" />
-          </>}
         </svg>
-        <div className="radar-status"><span>{manual ? "FINE TUNE ACTIVE // 9D MATCH" : dragging ? "ARCHIVE SCANNING" : "DRAG THROUGH 125 CASES"}</span><button type="button" onClick={reset}>RESET DAMAGE</button></div>
+        <div className="micro">THIS SHAPE IS THE ACTUAL NINE-AXIS PROFILE. THE ARCHIVE FIELD IS ONLY FOR NAVIGATION.</div>
       </div>
-    </section>
 
-    <aside className="radar-result" aria-live="polite">
-      <div className="eyebrow">CURRENT DAMAGE PROFILE</div>
-      <div className="radar-family">{family}</div>
-      <div className="radar-match-label">NEAREST CASE // {matchScore}% MATCH</div>
       {primary && <article className="radar-primary">
         {primaryArt && <div className="radar-primary-art"><Image src={primaryArt} alt={primaryMeta?.alt ?? ""} fill sizes="(max-width: 900px) 92vw, 34vw" /></div>}
         <div className="case-id">{primary.case_id} // RECOMMENDED TREATMENT</div>
@@ -209,7 +231,7 @@ export function DamageRadar() {
     </aside>
 
     <section className="radar-finetune">
-      <div className="section-head"><div><div className="eyebrow">FINE TUNE THE DAMAGE</div><h2>Nine knobs nobody asked for.</h2></div><p className="section-copy">The map explores the whole archive. These knobs switch to exact nine-axis matching when approximation begins to offend you personally.</p></div>
+      <div className="section-head"><div><div className="eyebrow">FINE TUNE THE DAMAGE</div><h2>Nine knobs nobody asked for.</h2></div><p className="section-copy">The archive field explores all 125 cases. These knobs switch to exact nine-axis matching when approximation begins to offend you personally.</p></div>
       <div className="radar-sliders">
         {axes.map((axis) => <label key={axis} className="radar-slider"><span>{LABELS[axis]}</span><input type="range" min="0" max="100" value={profile[axis]} onChange={(event) => {
           const base = manual ? manualProfile : profile;
