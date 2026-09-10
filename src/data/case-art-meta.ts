@@ -9,4 +9,8 @@ export const caseArtMeta = {
   "The “Trust Me, I Have a Plan” Playlist": { alt: "A confident man beneath a maze-like brain surrounded by diagrams, instruments, warning symbols and a bad-idea path", tone: "absurd" },
   "God I Miss You Like I Miss Herpes": { alt: "A heartbroken young man painted into a graffiti wall with a broken heart, records and a raised middle finger", tone: "zine" },
   "High Heels, Low Morals": { alt: "A glamorous woman in a sequined dress and dangerous heels running through a neon city street at night", tone: "glamour" },
+  "404: Peace Not Found": { alt: "A masked soldier standing inside a psychedelic collision of war, music, machinery, flowers and peace symbols", tone: "psychedelic" },
+  "Debugging the Universe": { alt: "A crumbling retro computer-headed figure dissolving into pixels, circuitry, galaxies and a broken planet", tone: "cosmic" },
+  "Crying in the Club Bathroom": { alt: "A distressed young woman sitting in a battered club bathroom surrounded by graffiti and sound-wave graphics", tone: "zine" },
+  "Soft Anchors in the Chaos": { alt: "A luminous anchor emerging through soft fractured layers, with a mother-and-child silhouette held at its base", tone: "soft" },
 } as const;
