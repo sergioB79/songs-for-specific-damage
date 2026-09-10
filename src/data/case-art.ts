@@ -9,6 +9,11 @@ export const caseArtByTitle: Record<string, string> = {
   "Grandma Took My Acid": art("grandma-took-my-acid.jpeg"),
   "Punching Ghosts": art("punching-ghosts.jpeg"),
   "Cows Wearing High Heels": art("cows-wearing-high-heels.jpeg"),
+  "All In (Poker Face of Steel)": art("all-in-poker-face-of-steel.jpeg"),
+  "Slow Dancing with a Ghost": art("slow-dancing-with-a-ghost.jpeg"),
+  "The “Trust Me, I Have a Plan” Playlist": art("trust-me-i-have-a-plan.jpeg"),
+  "God I Miss You Like I Miss Herpes": art("god-i-miss-you-like-i-miss-herpes.jpeg"),
+  "High Heels, Low Morals": art("high-heels-low-morals.jpeg"),
 };
 
 export function getCaseArt(item: Pick<CaseFile, "title">) {
