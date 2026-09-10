@@ -26,7 +26,7 @@ export default async function CasePage({params}:{params:Promise<{slug:string}>})
           <div className="case-art-image"><Image src={art} alt={meta?.alt??""} fill priority sizes="(max-width: 900px) 94vw, 62vw" /></div>
           <figcaption><span>VISUAL EVIDENCE // {item.case_id}</span><strong>RELEVANCE: UNCONFIRMED</strong><small>{meta?.tone?.toUpperCase()??"ARCHIVE"} MATERIAL // DO NOT OVER-INTERPRET</small></figcaption>
         </figure>}
-        <div className="treatment-label">RECOMMENDED TREATMENT // AUDIO ADMINISTRATION</div>
+        <div className="treatment-label"><span>RECOMMENDED TREATMENT // AUDIO ADMINISTRATION</span><a className="spotify-direct" href={item.spotify_url} target="_blank" rel="noreferrer">OPEN PLAYLIST IN SPOTIFY ↗</a></div>
         <iframe className="spotify-frame" src={`https://open.spotify.com/embed/playlist/${spotifyId(item.spotify_url)}`} allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" title={`Spotify playlist: ${item.title}`}/>
       </div>
       <aside className="report">
