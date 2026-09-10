@@ -5,9 +5,9 @@ import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 import { caseArtMeta } from "@/data/case-art-meta";
 import { getCaseArt } from "@/data/case-art";
-import { axes, caseSlug, clamp, closestCases, closestFamily, distance } from "@/lib/data";
+import { axes, caseSlug, cases, closestCases, closestFamily, distance } from "@/lib/data";
 import { neutralProfile } from "@/lib/quiz";
-import type { Axis } from "@/types/ssd";
+import type { Axis, CaseFile } from "@/types/ssd";
 
 const DISPLAY_AXES: Axis[] = [
   "melancholy",
@@ -37,28 +37,11 @@ const SIZE = 600;
 const CENTER = SIZE / 2;
 const RADIUS = 205;
 const LABEL_RADIUS = 258;
+const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
 function direction(index: number) {
   const angle = -Math.PI / 2 + (Math.PI * 2 * index) / DISPLAY_AXES.length;
   return { x: Math.cos(angle), y: Math.sin(angle) };
-}
-
-function profileFromPoint(x: number, y: number): Record<Axis, number> {
-  const next = { ...neutralProfile };
-  DISPLAY_AXES.forEach((axis, index) => {
-    const dir = direction(index);
-    const projection = x * dir.x + y * dir.y;
-    next[axis] = Math.round(clamp(50 + projection * 50));
-  });
-  return next;
-}
-
-function polygonPoints(profile: Record<Axis, number>, scale = 1) {
-  return DISPLAY_AXES.map((axis, index) => {
-    const dir = direction(index);
-    const r = RADIUS * (profile[axis] / 100) * scale;
-    return `${CENTER + dir.x * r},${CENTER + dir.y * r}`;
-  }).join(" ");
 }
 
 function ringPoints(level: number) {
@@ -69,52 +52,88 @@ function ringPoints(level: number) {
   }).join(" ");
 }
 
+function polygonPoints(profile: Record<Axis, number>) {
+  return DISPLAY_AXES.map((axis, index) => {
+    const dir = direction(index);
+    const r = RADIUS * (profile[axis] / 100);
+    return `${CENTER + dir.x * r},${CENTER + dir.y * r}`;
+  }).join(" ");
+}
+
+function profileOf(item: CaseFile): Record<Axis, number> {
+  return Object.fromEntries(axes.map((axis) => [axis, item[axis]])) as Record<Axis, number>;
+}
+
+const ELIGIBLE_CASES = cases.filter((item) => item.quiz_eligible !== "REVIEW");
+
+/*
+  The radar is a 2D navigation surface, but the archive is 9D.
+  A deterministic sunflower layout gives every case its own patch of territory,
+  so dragging can genuinely reach the full archive instead of collapsing into
+  a handful of mathematically convenient neighbours.
+*/
+const ARCHIVE_FIELD = ELIGIBLE_CASES.map((item, index) => {
+  const radius = Math.sqrt((index + .5) / ELIGIBLE_CASES.length) * .94;
+  const angle = index * GOLDEN_ANGLE;
+  return { item, x: Math.cos(angle) * radius, y: Math.sin(angle) * radius };
+});
+
+function nearestArchiveCases(point: { x: number; y: number }, count = 3) {
+  return ARCHIVE_FIELD
+    .map((entry) => ({ ...entry, score: Math.hypot(point.x - entry.x, point.y - entry.y) }))
+    .sort((a, b) => a.score - b.score)
+    .slice(0, count);
+}
+
 export function DamageRadar() {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [point, setPoint] = useState({ x: 0, y: 0 });
-  const [profile, setProfile] = useState<Record<Axis, number>>({ ...neutralProfile });
+  const [manualProfile, setManualProfile] = useState<Record<Axis, number>>({ ...neutralProfile });
   const [dragging, setDragging] = useState(false);
   const [manual, setManual] = useState(false);
 
-  const matches = useMemo(() => closestCases(profile, 3), [profile]);
-  const family = useMemo(() => closestFamily(profile), [profile]);
+  const positionalMatches = useMemo(() => nearestArchiveCases(point, 3), [point]);
+  const manualMatches = useMemo(() => closestCases(manualProfile, 3), [manualProfile]);
+  const matches = manual ? manualMatches : positionalMatches.map((entry) => entry.item);
   const primary = matches[0];
+  const profile = manual ? manualProfile : primary ? profileOf(primary) : neutralProfile;
+  const family = manual ? closestFamily(profile).family : primary?.primary_damage ?? "COSMIC MALFUNCTION";
   const primaryArt = primary ? getCaseArt(primary) : null;
   const primaryMeta = primary ? caseArtMeta[primary.title as keyof typeof caseArtMeta] : undefined;
-  const matchScore = primary ? Math.max(0, Math.round(100 - distance(profile, primary) / 3)) : 0;
+  const positionalDistance = positionalMatches[0]?.score ?? 1;
+  const matchScore = primary
+    ? manual
+      ? Math.max(0, Math.round(100 - distance(profile, primary) / 3))
+      : Math.max(68, Math.round(100 - positionalDistance * 90))
+    : 0;
 
   function setFromPointer(clientX: number, clientY: number) {
     const svg = svgRef.current;
     if (!svg) return;
     const rect = svg.getBoundingClientRect();
-    let x = ((clientX - rect.left) / rect.width) * SIZE;
-    let y = ((clientY - rect.top) / rect.height) * SIZE;
-    let nx = (x - CENTER) / RADIUS;
-    let ny = (y - CENTER) / RADIUS;
+    let nx = (((clientX - rect.left) / rect.width) * SIZE - CENTER) / RADIUS;
+    let ny = (((clientY - rect.top) / rect.height) * SIZE - CENTER) / RADIUS;
     const length = Math.hypot(nx, ny);
     if (length > 1) {
       nx /= length;
       ny /= length;
-      x = CENTER + nx * RADIUS;
-      y = CENTER + ny * RADIUS;
     }
     setPoint({ x: nx, y: ny });
-    setProfile(profileFromPoint(nx, ny));
     setManual(false);
   }
 
   function reset() {
     setPoint({ x: 0, y: 0 });
-    setProfile({ ...neutralProfile });
+    setManualProfile({ ...neutralProfile });
     setManual(false);
   }
 
   return <div className="radar-shell">
     <section className="radar-stage">
       <div className="radar-instructions">
-        <span className="eyebrow">POSITIONAL DIAGNOSTICS // EXPERIMENTAL</span>
-        <p><strong>Drag the dot.</strong> The archive will attempt to interpret the consequences.</p>
-        <p className="micro">PLACE YOUR DAMAGE APPROXIMATELY. PRECISION HAS NOT HELPED ANYONE SO FAR.</p>
+        <span className="eyebrow">POSITIONAL DIAGNOSTICS // 125 CASES IN FIELD</span>
+        <p><strong>Drag the dot through the archive.</strong> Every small point is an actual case, not decorative emotional dust.</p>
+        <p className="micro">THE MAP IS APPROXIMATE. THE CONSEQUENCES ARE REAL ENOUGH.</p>
       </div>
 
       <div className="radar-board">
@@ -123,7 +142,7 @@ export function DamageRadar() {
           className="radar-svg"
           viewBox={`0 0 ${SIZE} ${SIZE}`}
           role="img"
-          aria-label="Interactive nine-axis damage radar. Drag the central point to change the recommendation."
+          aria-label="Interactive nine-axis damage map containing the full playlist archive. Drag the central point to change the recommendation."
           onPointerDown={(event) => {
             setDragging(true);
             event.currentTarget.setPointerCapture(event.pointerId);
@@ -149,17 +168,31 @@ export function DamageRadar() {
               <text x={labelX} y={labelY} textAnchor={anchor} dominantBaseline="middle" className="radar-label">{LABELS[axis]}</text>
             </g>;
           })}
+
+          {!manual && ARCHIVE_FIELD.map((entry) => {
+            const active = matches.some((item) => item.case_id === entry.item.case_id);
+            return <circle
+              key={entry.item.case_id}
+              cx={CENTER + entry.x * RADIUS}
+              cy={CENTER + entry.y * RADIUS}
+              r={active ? 5 : 2.4}
+              className={active ? "radar-case-dot is-active" : "radar-case-dot"}
+            ><title>{entry.item.title}</title></circle>;
+          })}
+
           <polygon points={polygonPoints(profile)} className="radar-profile" />
-          <circle cx={CENTER + point.x * RADIUS} cy={CENTER + point.y * RADIUS} r="18" className="radar-dot-halo" />
-          <circle cx={CENTER + point.x * RADIUS} cy={CENTER + point.y * RADIUS} r="10" className="radar-dot" />
+          {!manual && <>
+            <circle cx={CENTER + point.x * RADIUS} cy={CENTER + point.y * RADIUS} r="18" className="radar-dot-halo" />
+            <circle cx={CENTER + point.x * RADIUS} cy={CENTER + point.y * RADIUS} r="10" className="radar-dot" />
+          </>}
         </svg>
-        <div className="radar-status"><span>{manual ? "FINE TUNE ACTIVE" : dragging ? "DAMAGE MOVING" : "DRAG TO RECLASSIFY"}</span><button type="button" onClick={reset}>RESET DAMAGE</button></div>
+        <div className="radar-status"><span>{manual ? "FINE TUNE ACTIVE // 9D MATCH" : dragging ? "ARCHIVE SCANNING" : "DRAG THROUGH 125 CASES"}</span><button type="button" onClick={reset}>RESET DAMAGE</button></div>
       </div>
     </section>
 
     <aside className="radar-result" aria-live="polite">
       <div className="eyebrow">CURRENT DAMAGE PROFILE</div>
-      <div className="radar-family">{family.family}</div>
+      <div className="radar-family">{family}</div>
       <div className="radar-match-label">NEAREST CASE // {matchScore}% MATCH</div>
       {primary && <article className="radar-primary">
         {primaryArt && <div className="radar-primary-art"><Image src={primaryArt} alt={primaryMeta?.alt ?? ""} fill sizes="(max-width: 900px) 92vw, 34vw" /></div>}
@@ -176,9 +209,13 @@ export function DamageRadar() {
     </aside>
 
     <section className="radar-finetune">
-      <div className="section-head"><div><div className="eyebrow">FINE TUNE THE DAMAGE</div><h2>Nine knobs nobody asked for.</h2></div><p className="section-copy">The dot is fast. These are for people who distrust approximate emotional geometry.</p></div>
+      <div className="section-head"><div><div className="eyebrow">FINE TUNE THE DAMAGE</div><h2>Nine knobs nobody asked for.</h2></div><p className="section-copy">The map explores the whole archive. These knobs switch to exact nine-axis matching when approximation begins to offend you personally.</p></div>
       <div className="radar-sliders">
-        {axes.map((axis) => <label key={axis} className="radar-slider"><span>{LABELS[axis]}</span><input type="range" min="0" max="100" value={profile[axis]} onChange={(event) => {setProfile((current) => ({ ...current, [axis]: Number(event.target.value) }));setManual(true);}}/><b>{profile[axis]}</b></label>)}
+        {axes.map((axis) => <label key={axis} className="radar-slider"><span>{LABELS[axis]}</span><input type="range" min="0" max="100" value={profile[axis]} onChange={(event) => {
+          const base = manual ? manualProfile : profile;
+          setManualProfile({ ...base, [axis]: Number(event.target.value) });
+          setManual(true);
+        }}/><b>{profile[axis]}</b></label>)}
       </div>
     </section>
   </div>;
