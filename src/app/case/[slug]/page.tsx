@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ShuffleAgain } from "@/components/ShuffleAgain";
 import { caseArtMeta } from "@/data/case-art-meta";
 import { getCaseArt } from "@/data/case-art";
 import { axes,caseSlug,cases,getCaseBySlug,spotifyId } from "@/lib/data";
@@ -42,5 +43,6 @@ export default async function CasePage({params}:{params:Promise<{slug:string}>})
       </aside>
     </div>
     <section className="section related"><div className="section-head"><h2>Alternative treatments</h2><Link href="/index" className="micro">RETURN TO INDEX →</Link></div><div className="manifesto-grid">{related.map((other)=><article className="note-card" key={other.case_id}><span className="case-id">{other.case_id}</span><h3>{other.title}</h3><p>{other.ssd_description}</p><Link className="micro" href={`/case/${caseSlug(other)}`}>OPEN CASE →</Link></article>)}</div></section>
+    <ShuffleAgain currentCaseId={item.case_id}/>
   </main>
 }
