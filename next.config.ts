@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
   trailingSlash: true,
   basePath: repoBase,
   assetPrefix: repoBase || undefined,
+  images: {
+    unoptimized: true,
+  },
 };
 
 export default nextConfig;
