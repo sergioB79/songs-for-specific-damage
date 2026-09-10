@@ -14,13 +14,20 @@ export function QuizClient(){
   const[profile,setProfile]=useState<Record<Axis,number>>({...neutralProfile});
   const[complete,setComplete]=useState(false);
   const[escalation,setEscalation]=useState<string[]>([]);
+  const[forcedCaseId,setForcedCaseId]=useState<string|null>(null);
 
   useEffect(()=>{setQuestions(buildRandomQuiz())},[]);
 
-  const results=useMemo(()=>closestCases(profile,3),[profile]);
+  const nearest=useMemo(()=>closestCases(profile,4),[profile]);
+  const forcedCase=useMemo(()=>forcedCaseId?cases.find((item)=>item.case_id===forcedCaseId)??null:null,[forcedCaseId]);
+  const results=useMemo(()=>{
+    if(!forcedCase)return nearest.slice(0,3);
+    return[forcedCase,...nearest.filter((item)=>item.case_id!==forcedCase.case_id)].slice(0,3);
+  },[forcedCase,nearest]);
   const family=useMemo(()=>closestFamily(profile),[profile]);
-  const severity=Math.round(axes.reduce((sum,axis)=>sum+Math.abs(profile[axis]-50),0)/axes.length*2);
+  const profileSeverity=Math.round(axes.reduce((sum,axis)=>sum+Math.abs(profile[axis]-50),0)/axes.length*2);
   const primary=results[0];
+  const displayIntensity=forcedCase?primary.damage_intensity:profileSeverity;
 
   const worseCandidate=useMemo(()=>{
     if(!complete||!primary)return null;
@@ -43,11 +50,12 @@ export function QuizClient(){
   function makeItWorse(){
     if(!worseCandidate)return;
     setEscalation((current)=>[...current,primary.case_id]);
+    setForcedCaseId(worseCandidate.case_id);
     setProfile(caseProfile(worseCandidate));
   }
 
   function reset(){
-    setQuestions(buildRandomQuiz());setStep(0);setProfile({...neutralProfile});setComplete(false);setEscalation([]);
+    setQuestions(buildRandomQuiz());setStep(0);setProfile({...neutralProfile});setComplete(false);setEscalation([]);setForcedCaseId(null);
   }
 
   if(!complete){
@@ -55,5 +63,5 @@ export function QuizClient(){
     return <div className="quiz-wrap"><div className="quiz-progress">SSD//DIAGNOSIS — QUESTION {String(step+1).padStart(2,"0")}/{questions.length} // RANDOMIZED FROM {quizQuestionPool.length}</div><div className="quiz-card"><div className="eyebrow">Fine. Let’s find out what’s wrong with you.</div><h1>{q.prompt}</h1><div className="answers">{q.answers.map((answer)=><button className="answer" onClick={()=>choose(answer.delta)} key={answer.label}>{answer.label}</button>)}</div></div><p className="micro">This is not a medical diagnosis. It may, however, be more useful than your Discover Weekly.</p></div>;
   }
 
-  return <div className="quiz-wrap"><div className="quiz-card"><div className="eyebrow">SSD // DAMAGE REPORT // DIAGNOSIS COMPLETE</div><h1 className="result-title">{family.family}</h1><div className="report-row"><b>Damage intensity</b><div>{severity}% — {severityLabel(severity)}<div className="meter"><span style={{width:`${severity}%`}}/></div></div></div><div className="report-row"><b>Recommended treatment</b><div><strong>{primary.title}</strong><p>{primary.ssd_description}</p></div></div><div className="report-row"><b>Symptoms</b><div>{primary.symptoms}</div></div><div className="report-row"><b>Dosage</b><div>{primary.dosage}</div></div><div className="report-row"><b>Prognosis</b><div>{primary.prognosis}</div></div><div className="report-row"><b>Alternative treatments</b><div>{results.slice(1).map((item)=><div key={item.case_id}><Link href={`/case/${caseSlug(item)}`}>{item.title} →</Link></div>)}</div></div><div className="action-row"><a className="button" href={primary.spotify_url} target="_blank" rel="noreferrer">Listen</a><button className="button alt" onClick={makeItWorse} disabled={!worseCandidate}>{worseCandidate?"Make It Worse":"Maximum Damage Reached"}</button><button className="button alt" onClick={reset}>Diagnosis Is Wrong</button></div>{escalation.length>0&&<p className="micro">ESCALATION LEVEL {escalation.length} // TREATMENT RECLASSIFIED // THIS WAS YOUR DECISION.</p>}</div></div>;
+  return <div className="quiz-wrap"><div className="quiz-card"><div className="eyebrow">SSD // DAMAGE REPORT // DIAGNOSIS COMPLETE</div><h1 className="result-title">{family.family}</h1><div className="report-row"><b>Damage intensity</b><div>{displayIntensity}% — {severityLabel(displayIntensity)}<div className="meter"><span style={{width:`${displayIntensity}%`}}/></div></div></div><div className="report-row"><b>Recommended treatment</b><div><strong>{primary.title}</strong><p>{primary.ssd_description}</p></div></div><div className="report-row"><b>Symptoms</b><div>{primary.symptoms}</div></div><div className="report-row"><b>Dosage</b><div>{primary.dosage}</div></div><div className="report-row"><b>Prognosis</b><div>{primary.prognosis}</div></div><div className="report-row"><b>Alternative treatments</b><div>{results.slice(1).map((item)=><div key={item.case_id}><Link href={`/case/${caseSlug(item)}`}>{item.title} →</Link></div>)}</div></div><div className="action-row"><a className="button" href={primary.spotify_url} target="_blank" rel="noreferrer">Listen</a><button className="button alt" onClick={makeItWorse} disabled={!worseCandidate}>{worseCandidate?"Make It Worse":"Maximum Damage Reached"}</button><button className="button alt" onClick={reset}>Diagnosis Is Wrong</button></div>{escalation.length>0&&<p className="micro">ESCALATION LEVEL {escalation.length} // TREATMENT RECLASSIFIED // THIS WAS YOUR DECISION.</p>}</div></div>;
 }
