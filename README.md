@@ -51,8 +51,6 @@ npm install
 npm run dev
 ```
 
-`predev` and `prebuild` automatically materialize the compressed AVIF case art from the versioned Base64 sources in `assets-src/case-art` into `public/case-art`.
-
 ## Source of truth
 
 The runtime database is deliberately split to keep the archive easy to version and review:
@@ -61,7 +59,7 @@ The runtime database is deliberately split to keep the archive easy to version a
 - `src/data/chunks/cases-01.json` … `cases-10.json` — all 125 documented cases
 - `src/lib/data.ts` — combines those chunks for the application and recommendation engine
 - `src/data/case-art.ts` — maps cases to available visual evidence
-- `assets-src/case-art` — source payloads for CASE ART // BATCH 001
+- `public/case-art` — directly committed JPEG artwork used by the site
 
 The editable source workbook is generated from the same dataset and kept as a separate project artifact rather than committed as binary source.
 
