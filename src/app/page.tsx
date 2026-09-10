@@ -5,6 +5,9 @@ import { caseArtMeta } from "@/data/case-art-meta";
 import { getCaseArt } from "@/data/case-art";
 import { caseSlug, cases } from "@/lib/data";
 
+const basePath=process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+const indexHref=`${basePath}/index/`;
+
 const featuredTitles=["Soft Anchors in the Chaos","404: Peace Not Found","All In (Poker Face of Steel)","Debugging the Universe","Cardio Is Murder","Drive to the End of the World","High Heels, Low Morals","Cows Wearing High Heels","Grandma Took My Acid","Crying in the Club Bathroom"];
 const featured=featuredTitles.map((title)=>cases.find((item)=>item.title===title)).filter(Boolean) as typeof cases;
 const cow=cases.find((item)=>item.title==="Cows Wearing High Heels")!;
@@ -33,7 +36,7 @@ export default function HomePage(){return <main>
       <h1>Songs for<br/>Specific Damage</h1>
       <p className="descriptor">An Index of Bad Ideas &amp; Good Music</p>
       <p className="pitch">Some moods are too specific for genres. Music for whatever is specifically wrong with you today.</p>
-      <div className="action-row"><Link className="button" href="/diagnose">Diagnose My Damage</Link><Link className="button alt" href="/radar">Move the Damage</Link><Link className="button alt" href="/index">Enter the Index</Link><Link className="button alt" href="/surprise">Surprise Me</Link></div>
+      <div className="action-row"><Link className="button" href="/diagnose">Diagnose My Damage</Link><Link className="button alt" href="/radar">Move the Damage</Link><a className="button alt" href={indexHref}>Enter the Index</a><Link className="button alt" href="/surprise">Surprise Me</Link></div>
       <p className="micro hero-warning">UNLICENSED EMOTIONAL DIAGNOSTICS // RESULTS MAY VARY AFTER MIDNIGHT</p>
     </div>
 
@@ -68,7 +71,7 @@ export default function HomePage(){return <main>
 
   <section className="section"><div className="section-head"><h2>The operating principle</h2><p className="section-copy">Spotify asks what music you like. We ask what went wrong. The content may be absurd. The navigation may not.</p></div><div className="manifesto-grid"><article className="note-card"><strong>01 — Diagnose</strong><p>Answer eight questions that have no business being part of a music recommendation system.</p><span className="micro">UNLICENSED EMOTIONAL DIAGNOSTICS</span></article><article className="note-card"><strong>02 — Move</strong><p>Drag one point through nine emotional axes until the recommendation feels suspiciously accurate.</p><span className="micro">POSITIONAL DIAGNOSTICS // EXPERIMENTAL</span></article><article className="note-card"><strong>03 — Treat</strong><p>Receive one recommended playlist and two alternative treatments. MAKE IT WORSE remains available.</p><span className="micro">LISTENING ADVISED</span></article></div></section>
 
-  <section className="section"><div className="section-head"><div><div className="eyebrow">SELECTED FILES / NOT A BEST-OF</div><h2>Cases currently on the desk</h2></div><Link className="button alt" href="/index">View all 125</Link></div><div className="case-grid">{featured.map((item)=><CaseCard key={item.case_id} item={item}/>)}</div></section>
+  <section className="section"><div className="section-head"><div><div className="eyebrow">SELECTED FILES / NOT A BEST-OF</div><h2>Cases currently on the desk</h2></div><a className="button alt" href={indexHref}>View all 125</a></div><div className="case-grid">{featured.map((item)=><CaseCard key={item.case_id} item={item}/>)}</div></section>
 
   <section className="section closing-damage"><div className="section-head"><h2>Genres describe music.<br/>Damage describes why you need it.</h2><p className="section-copy">125 documented cases. Eight damage families. One suspiciously committed archive.</p></div><div className="action-row"><Link className="button" href="/diagnose">Start diagnosis</Link><Link className="button alt" href="/radar">Move the damage</Link><Link className="button alt" href="/surprise">I refuse to think</Link></div><div className="bottom-warning">YOU HAVE REACHED THE BOTTOM. THIS HAS SOLVED NOTHING.</div></section>
 </main>}
