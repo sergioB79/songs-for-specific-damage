@@ -4,4 +4,9 @@ export const caseArtMeta = {
   "Grandma Took My Acid": { alt: "Psychedelic collage of an elderly woman surrounded by melting clocks, flowers and comic panels", tone: "psychedelic" },
   "Punching Ghosts": { alt: "Comic-zine collage about punching ghosts with arrows, charts and loud typography", tone: "combat" },
   "Cows Wearing High Heels": { alt: "A cow in red high heels presented as deadpan pop-art evidence", tone: "absurd" },
+  "All In (Poker Face of Steel)": { alt: "A small fantasy creature holding a poker face at a table surrounded by intimidating players and stacks of chips", tone: "glamour" },
+  "Slow Dancing with a Ghost": { alt: "A suited man slow dancing with a translucent ghost against a vivid retro patterned background", tone: "cinematic" },
+  "The “Trust Me, I Have a Plan” Playlist": { alt: "A confident man beneath a maze-like brain surrounded by diagrams, instruments, warning symbols and a bad-idea path", tone: "absurd" },
+  "God I Miss You Like I Miss Herpes": { alt: "A heartbroken young man painted into a graffiti wall with a broken heart, records and a raised middle finger", tone: "zine" },
+  "High Heels, Low Morals": { alt: "A glamorous woman in a sequined dress and dangerous heels running through a neon city street at night", tone: "glamour" },
 } as const;
