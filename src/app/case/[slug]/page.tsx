@@ -17,7 +17,7 @@ export default async function CasePage({params}:{params:Promise<{slug:string}>})
   const related=cases.filter((other)=>other.case_id!==item.case_id&&(other.primary_damage===item.primary_damage||other.secondary_damage===item.primary_damage)).slice(0,3);
 
   return <main className={`case-page${art?" case-page-has-art":""}`}>
-    <div className="eyebrow">{item.case_id} // CASE FILE // {item.status}</div>
+    <div className="eyebrow">{item.case_id} — {item.status}</div>
     <div className="case-layout">
       <div className="case-main">
         <h1>{item.title}</h1>
