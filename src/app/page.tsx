@@ -5,12 +5,23 @@ import { caseArtMeta } from "@/data/case-art-meta";
 import { getCaseArt } from "@/data/case-art";
 import { caseSlug, cases } from "@/lib/data";
 
-const featuredTitles=["Soft Anchors in the Chaos","404: Peace Not Found","Naked Wearing Gucci","Debugging the Universe","Cardio Is Murder","Drive to the End of the World","Forex Scalping Mode","Cows Wearing High Heels","Grandma Took My Acid","Crying in the Club Bathroom"];
+const featuredTitles=["Soft Anchors in the Chaos","404: Peace Not Found","All In (Poker Face of Steel)","Debugging the Universe","Cardio Is Murder","Drive to the End of the World","High Heels, Low Morals","Cows Wearing High Heels","Grandma Took My Acid","Crying in the Club Bathroom"];
 const featured=featuredTitles.map((title)=>cases.find((item)=>item.title===title)).filter(Boolean) as typeof cases;
 const cow=cases.find((item)=>item.title==="Cows Wearing High Heels")!;
 const grandma=cases.find((item)=>item.title==="Grandma Took My Acid")!;
 const club=cases.find((item)=>item.title==="F#ck This! I Am Out.")!;
-const evidenceTitles=["Grandma Took My Acid","Punching Ghosts","Pizza, Pasta, Puttana","F#ck This! I Am Out."];
+const evidenceTitles=[
+  "Grandma Took My Acid",
+  "Punching Ghosts",
+  "Pizza, Pasta, Puttana",
+  "F#ck This! I Am Out.",
+  "All In (Poker Face of Steel)",
+  "Slow Dancing with a Ghost",
+  "The “Trust Me, I Have a Plan” Playlist",
+  "God I Miss You Like I Miss Herpes",
+  "High Heels, Low Morals",
+  "Cows Wearing High Heels",
+];
 const evidence=evidenceTitles.map((title)=>cases.find((item)=>item.title===title)).filter(Boolean) as typeof cases;
 
 function artAlt(title:string){return caseArtMeta[title as keyof typeof caseArtMeta]?.alt ?? ""}
@@ -22,7 +33,7 @@ export default function HomePage(){return <main>
       <h1>Songs for<br/>Specific Damage</h1>
       <p className="descriptor">An Index of Bad Ideas &amp; Good Music</p>
       <p className="pitch">Some moods are too specific for genres. Music for whatever is specifically wrong with you today.</p>
-      <div className="action-row"><Link className="button" href="/diagnose">Diagnose My Damage</Link><Link className="button alt" href="/index">Enter the Index</Link><Link className="button alt" href="/surprise">Surprise Me</Link></div>
+      <div className="action-row"><Link className="button" href="/diagnose">Diagnose My Damage</Link><Link className="button alt" href="/radar">Move the Damage</Link><Link className="button alt" href="/index">Enter the Index</Link><Link className="button alt" href="/surprise">Surprise Me</Link></div>
       <p className="micro hero-warning">UNLICENSED EMOTIONAL DIAGNOSTICS // RESULTS MAY VARY AFTER MIDNIGHT</p>
     </div>
 
@@ -45,7 +56,7 @@ export default function HomePage(){return <main>
   </section>
 
   <section className="section evidence-section">
-    <div className="section-head"><div><div className="eyebrow">CASE ART // BATCH 001 // RECOVERED MATERIAL</div><h2>We found some evidence.</h2></div><p className="section-copy">Its relevance remains disputed. The music is not.</p></div>
+    <div className="section-head"><div><div className="eyebrow">CASE ART // BATCH 001–002 // 10 FILES RECOVERED</div><h2>We found more evidence.</h2></div><p className="section-copy">Its relevance remains disputed. The music is not.</p></div>
     <div className="evidence-wall">
       {evidence.map((item,index)=>{const art=getCaseArt(item);return art?<Link href={`/case/${caseSlug(item)}`} className={`evidence-card evidence-card-${index+1}`} key={item.case_id}>
         <div className="evidence-image"><Image src={art} alt={artAlt(item.title)} fill sizes="(max-width: 760px) 92vw, 46vw" /></div>
@@ -55,9 +66,9 @@ export default function HomePage(){return <main>
     </div>
   </section>
 
-  <section className="section"><div className="section-head"><h2>The operating principle</h2><p className="section-copy">Spotify asks what music you like. We ask what went wrong. The content may be absurd. The navigation may not.</p></div><div className="manifesto-grid"><article className="note-card"><strong>01 — Diagnose</strong><p>Answer eight questions that have no business being part of a music recommendation system.</p><span className="micro">UNLICENSED EMOTIONAL DIAGNOSTICS</span></article><article className="note-card"><strong>02 — Classify</strong><p>We map your current malfunction across nine emotional axes. No genres consulted.</p><span className="micro">CLASSIFICATION DISPUTED BY MANAGEMENT</span></article><article className="note-card"><strong>03 — Treat</strong><p>Receive one recommended playlist and two alternative treatments. MAKE IT WORSE remains available.</p><span className="micro">LISTENING ADVISED</span></article></div></section>
+  <section className="section"><div className="section-head"><h2>The operating principle</h2><p className="section-copy">Spotify asks what music you like. We ask what went wrong. The content may be absurd. The navigation may not.</p></div><div className="manifesto-grid"><article className="note-card"><strong>01 — Diagnose</strong><p>Answer eight questions that have no business being part of a music recommendation system.</p><span className="micro">UNLICENSED EMOTIONAL DIAGNOSTICS</span></article><article className="note-card"><strong>02 — Move</strong><p>Drag one point through nine emotional axes until the recommendation feels suspiciously accurate.</p><span className="micro">POSITIONAL DIAGNOSTICS // EXPERIMENTAL</span></article><article className="note-card"><strong>03 — Treat</strong><p>Receive one recommended playlist and two alternative treatments. MAKE IT WORSE remains available.</p><span className="micro">LISTENING ADVISED</span></article></div></section>
 
   <section className="section"><div className="section-head"><div><div className="eyebrow">SELECTED FILES / NOT A BEST-OF</div><h2>Cases currently on the desk</h2></div><Link className="button alt" href="/index">View all 125</Link></div><div className="case-grid">{featured.map((item)=><CaseCard key={item.case_id} item={item}/>)}</div></section>
 
-  <section className="section closing-damage"><div className="section-head"><h2>Genres describe music.<br/>Damage describes why you need it.</h2><p className="section-copy">125 documented cases. Eight damage families. One suspiciously committed archive.</p></div><div className="action-row"><Link className="button" href="/diagnose">Start diagnosis</Link><Link className="button alt" href="/surprise">I refuse to think</Link></div><div className="bottom-warning">YOU HAVE REACHED THE BOTTOM. THIS HAS SOLVED NOTHING.</div></section>
+  <section className="section closing-damage"><div className="section-head"><h2>Genres describe music.<br/>Damage describes why you need it.</h2><p className="section-copy">125 documented cases. Eight damage families. One suspiciously committed archive.</p></div><div className="action-row"><Link className="button" href="/diagnose">Start diagnosis</Link><Link className="button alt" href="/radar">Move the damage</Link><Link className="button alt" href="/surprise">I refuse to think</Link></div><div className="bottom-warning">YOU HAVE REACHED THE BOTTOM. THIS HAS SOLVED NOTHING.</div></section>
 </main>}
